@@ -1,0 +1,104 @@
+'use client';
+
+import React, { useState } from 'react';
+import { GameStatus } from '../domain/models/GameSession';
+import { GameService } from '../services/GameService';
+import { BrawlStarsCharacterRepository } from '../services/CharacterRepository';
+import { useGameSession } from '../hooks/useGameSession';
+import { Lobby } from '../components/Lobby';
+import { GameBoard } from '../components/GameBoard';
+
+const characterRepository = new BrawlStarsCharacterRepository();
+const gameService = new GameService(characterRepository);
+
+export default function Home() {
+  const [playerName, setPlayerName] = useState('');
+  const [isSessionCreated, setIsSessionCreated] = useState(false);
+
+  const {
+    session,
+    currentPlayer,
+    createSession,
+    addPlayer,
+    removePlayer,
+    startGame,
+    togglePlayerStrikeOut,
+    toggleCharacterStrikeOut,
+    restartGame
+  } = useGameSession(gameService);
+
+  const handleCreateSession = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (playerName.trim()) {
+      createSession(playerName.trim());
+      setIsSessionCreated(true);
+    }
+  };
+
+  if (!isSessionCreated || !session || !currentPlayer) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800 flex items-center justify-center p-4">
+        <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-2xl p-8 max-w-md w-full">
+          <div className="text-center mb-6">
+            <h1 className="text-4xl font-bold text-gray-100 mb-2">🕵️ Шпион</h1>
+            <p className="text-gray-400">Brawl Stars Edition</p>
+          </div>
+
+          <form onSubmit={handleCreateSession}>
+            <div className="mb-6">
+              <label className="block text-gray-300 font-medium mb-2">
+                Ваше имя
+              </label>
+              <input
+                type="text"
+                value={playerName}
+                onChange={(e) => setPlayerName(e.target.value)}
+                placeholder="Введите ваше имя"
+                className="w-full px-4 py-3 bg-gray-900 border-2 border-gray-700 text-gray-200 placeholder-gray-500 rounded-lg focus:outline-none focus:border-cyan-600"
+                maxLength={20}
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg font-bold hover:from-cyan-500 hover:to-blue-500 transition"
+            >
+              Создать лобби
+            </button>
+          </form>
+
+          <div className="mt-6 pt-6 border-t border-gray-700">
+            <h3 className="font-semibold text-gray-300 mb-2">О игре:</h3>
+            <p className="text-sm text-gray-400">
+              Угадайте шпионов среди игроков! Шпионы не знают загаданного персонажа,
+              а мирные жители должны их вычислить, не выдав персонажа.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (session.status === GameStatus.LOBBY) {
+    return (
+      <Lobby
+        session={session}
+        currentPlayer={currentPlayer}
+        onAddPlayer={addPlayer}
+        onRemovePlayer={removePlayer}
+        onStartGame={startGame}
+      />
+    );
+  }
+
+  return (
+    <GameBoard
+      session={session}
+      currentPlayer={currentPlayer}
+      onTogglePlayerStrikeOut={togglePlayerStrikeOut}
+      onToggleCharacterStrikeOut={toggleCharacterStrikeOut}
+      onRestartGame={restartGame}
+    />
+  );
+}

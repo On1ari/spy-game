@@ -1,2 +1,2 @@
 # Для Railway/Render WebSocket сервера
-node server/index.ts
+web: npm start

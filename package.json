@@ -2,6 +2,10 @@
   "name": "spy-game",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "18.17.0",
+    "npm": "9.x"
+  },
   "scripts": {
     "dev": "next dev",
     "dev:server": "tsx watch server/index.ts",
@@ -9,6 +13,7 @@
     "build": "next build",
     "start": "next start",
     "start:server": "tsx server/index.ts",
+    "start:all": "concurrently \"tsx server/index.ts\" \"next start\"",
     "lint": "eslint"
   },
   "dependencies": {

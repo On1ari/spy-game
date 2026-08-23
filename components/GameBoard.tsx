@@ -1,9 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { GameSession } from '../domain/models/GameSession';
 import { Player } from '../domain/models/Player';
-import Image from 'next/image';
 
 interface GameBoardProps {
   session: GameSession;
@@ -20,8 +19,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   onToggleCharacterStrikeOut,
   onRestartGame
 }) => {
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+
   const getCurrentPlayerRole = (): Player | undefined => {
     return session.players.find(p => p.id === currentPlayer.id);
+  };
+
+  const handleImageError = (characterId: string) => {
+    setFailedImages(prev => new Set(prev).add(characterId));
   };
 
   const playerRole = getCurrentPlayerRole();
@@ -33,13 +38,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         {/* Информация о роли */}
         <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-2xl p-6 mb-6">
           <div className="text-center mb-6">
-            <Image
-              src={'https://media.ffycdn.net/eu/supercell/bYThcA3qTKn7fzJyL9fP.png'}
-              alt={'1'}
-              width={64}
-              height={64}
-              className="mx-auto mb-2"
-            />
             <h1 className="text-2xl font-bold text-gray-100 mb-2">
               {isSpy ? '🕵️ Вы ШПИОН!' : '🛡️ Вы МИРНЫЙ'}
             </h1>
@@ -116,38 +114,28 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                       : 'hover:bg-gray-700 hover:scale-105'
                   }`}
                 >
-                  {character.imageUrl ? (
-                    <div className={`relative w-16 h-16 ${character.isStrikedOut ? 'grayscale' : ''}`}>
-                      <Image
+                  <div className={`relative w-16 h-16 rounded-lg flex items-center justify-center overflow-hidden ${
+                    character.isStrikedOut ? 'bg-gray-700' : 'bg-gradient-to-br from-blue-600 to-cyan-600'
+                  }`}>
+                    {character.imageUrl && !failedImages.has(character.id) ? (
+                      <img
                         src={character.imageUrl}
                         alt={character.name}
-                        width={64}
-                        height={64}
-                        className="rounded-lg"
-                        unoptimized
+                        className={`w-full h-full object-cover rounded-lg ${character.isStrikedOut ? 'grayscale' : ''}`}
+                        onError={() => handleImageError(character.id)}
                       />
-                      {character.isStrikedOut && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-full h-0.5 bg-red-500 rotate-45 transform"></div>
-                          <div className="w-full h-0.5 bg-red-500 -rotate-45 transform absolute"></div>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className={`relative w-16 h-16 rounded-lg flex items-center justify-center ${
-                      character.isStrikedOut ? 'bg-gray-700' : 'bg-gradient-to-br from-blue-600 to-cyan-600'
-                    }`}>
+                    ) : (
                       <span className="text-white font-bold text-xl">
                         {character.name[0]}
                       </span>
-                      {character.isStrikedOut && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-full h-0.5 bg-red-500 rotate-45 transform"></div>
-                          <div className="w-full h-0.5 bg-red-500 -rotate-45 transform absolute"></div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                    )}
+                    {character.isStrikedOut && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                        <div className="w-full h-0.5 bg-red-500 rotate-45 transform"></div>
+                        <div className="w-full h-0.5 bg-red-500 -rotate-45 transform absolute"></div>
+                      </div>
+                    )}
+                  </div>
                   <span className={`text-[10px] font-medium text-center leading-tight ${
                     character.isStrikedOut ? 'line-through text-gray-600' : 'text-gray-300'
                   }`}>
